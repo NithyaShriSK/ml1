@@ -22,60 +22,40 @@ def find_s(data):
 
 def candidate_elimination(data):
     n = len(data[0]) - 1
-    domains = [set(row[i] for row in data) for i in range(n)]
-
-    S = [('0',) * n]
-    G = [('?',) * n]
-
-    def covers(h, x):
-        return all(h[i] == '?' or h[i] == x[i]
-                   for i in range(n))
-
-    def more_general(h1, h2):
-        return all(a == '?' or a == b
-                   for a, b in zip(h1, h2))
+    S = ['0'] * n
+    G = [['?'] * n]
 
     for row in data:
         x, label = row[:-1], row[-1]
 
         if label == "Yes":
-            G = [g for g in G if covers(g, x)]
+            G = [g for g in G if all(
+                g[i] == '?' or g[i] == x[i]
+                for i in range(n)
+            )]
 
-            new_S = []
-            for s in S:
-                if covers(s, x):
-                    new_S.append(s)
-                else:
-                    h = list(s)
-                    for i in range(n):
-                        if h[i] == '0':
-                            h[i] = x[i]
-                        elif h[i] != x[i]:
-                            h[i] = '?'
-                    new_S.append(tuple(h))
-
-            S = new_S
+            for i in range(n):
+                if S[i] == '0':
+                    S[i] = x[i]
+                elif S[i] != x[i]:
+                    S[i] = '?'
 
         else:
             new_G = []
             for g in G:
-                if covers(g, x):
+                if all(g[i] == '?' or g[i] == x[i]
+                       for i in range(n)):
                     for i in range(n):
-                        if g[i] == '?':
-                            for val in domains[i]:
-                                if val != x[i]:
-                                    h = list(g)
-                                    h[i] = val
-                                    h = tuple(h)
-
-                                    if any(more_general(h, s) for s in S):
-                                        new_G.append(h)
+                        if S[i] != '0' and S[i] != '?' and S[i] != x[i]:
+                            h = g.copy()
+                            h[i] = S[i]
+                            new_G.append(h)
                 else:
                     new_G.append(g)
 
             G = new_G
 
-    return [list(s) for s in S], [list(g) for g in G]
+    return S, G
 
 
 
